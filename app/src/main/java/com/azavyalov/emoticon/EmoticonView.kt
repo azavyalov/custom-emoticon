@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.*
 import android.graphics.Paint.Style.FILL
 import android.graphics.Paint.Style.STROKE
+import android.os.Bundle
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.View
 import com.azavyalov.emoticon.PaintType.*
@@ -31,6 +33,37 @@ class EmoticonView(context: Context?, attrs: AttributeSet?) : View(context, attr
         setupAttributes(attrs)
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
+        size = min(measuredHeight, measuredWidth)
+        setMeasuredDimension(size, size)
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        drawBackground(canvas)
+        drawEyes(canvas)
+        drawMouth(canvas)
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+        val bundle = Bundle()
+        bundle.putLong(FACE_STATE_KEY, faceState)
+        bundle.putParcelable(SUPER_STATE_KEY, super.onSaveInstanceState())
+        return bundle
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        var newState = state
+        if (newState is Bundle) {
+            faceState = newState.getLong(FACE_STATE_KEY, HAPPY)
+            newState = newState.getParcelable(SUPER_STATE_KEY)
+        }
+        super.onRestoreInstanceState(newState)
+    }
+
     private fun setupAttributes(attrs: AttributeSet?) {
         val ta = context.obtainStyledAttributes(
             attrs, R.styleable.EmoticonView,
@@ -45,21 +78,6 @@ class EmoticonView(context: Context?, attrs: AttributeSet?) : View(context, attr
         borderWidth = ta.getDimension(R.styleable.EmoticonView_borderWidth, DEFAULT_BORDER_WIDTH)
         // Array should be recycled after use
         ta.recycle()
-    }
-
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-
-        size = min(measuredHeight, measuredWidth)
-        setMeasuredDimension(size, size)
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-
-        drawBackground(canvas)
-        drawEyes(canvas)
-        drawMouth(canvas)
     }
 
     private fun drawBackground(canvas: Canvas) {
@@ -140,6 +158,9 @@ class EmoticonView(context: Context?, attrs: AttributeSet?) : View(context, attr
         private const val DEFAULT_MOUTH_COLOR = Color.BLACK
         private const val DEFAULT_BORDER_COLOR = Color.BLACK
         private const val DEFAULT_BORDER_WIDTH = 4.0f
+
+        private const val FACE_STATE_KEY = "STATE_KEY"
+        private const val SUPER_STATE_KEY = "SUPER_STATE_KEY"
 
         const val HAPPY = 0L
         const val SAD = 1L
