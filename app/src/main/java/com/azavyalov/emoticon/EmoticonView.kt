@@ -2,13 +2,13 @@ package com.azavyalov.emoticon
 
 import android.content.Context
 import android.graphics.*
+import android.graphics.Paint.ANTI_ALIAS_FLAG
 import android.graphics.Paint.Style.FILL
 import android.graphics.Paint.Style.STROKE
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.View
-import com.azavyalov.emoticon.PaintType.*
 import kotlin.math.min
 
 class EmoticonView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
@@ -19,6 +19,7 @@ class EmoticonView(context: Context?, attrs: AttributeSet?) : View(context, attr
     private var borderColor = DEFAULT_BORDER_COLOR
     private var borderWidth = DEFAULT_BORDER_WIDTH
 
+    private val paint = Paint(ANTI_ALIAS_FLAG)
     private val mouthPath = Path()
     private var size = 0
 
@@ -82,15 +83,20 @@ class EmoticonView(context: Context?, attrs: AttributeSet?) : View(context, attr
 
     private fun drawBackground(canvas: Canvas) {
         val radius = size / 2f
-        canvas.drawCircle(size / 2f, size / 2f, radius, getCustomPaint(BACKGROUND))
-        canvas.drawCircle(
-            size / 2f, size / 2f, radius - borderWidth / 2f,
-            getCustomPaint(BORDER)
-        )
+
+        paint.color = faceBackgroundColor
+        paint.style = FILL
+        canvas.drawCircle(size / 2f, size / 2f, radius, paint)
+
+        paint.color = borderColor
+        paint.style = STROKE
+        paint.strokeWidth = borderWidth
+        canvas.drawCircle(size / 2f, size / 2f, radius - borderWidth / 2f, paint)
     }
 
     private fun drawEyes(canvas: Canvas) {
-        val paint = getCustomPaint(EYES)
+        paint.color = eyesColor
+        paint.style = FILL
         when (faceState) {
             HAPPY -> drawHappyEyes(canvas, paint)
             SAD -> drawSadEyes(canvas, paint)
@@ -126,30 +132,9 @@ class EmoticonView(context: Context?, attrs: AttributeSet?) : View(context, attr
             mouthPath.quadTo(size * 0.5f, size * 0.60f, size * 0.22f, size * 0.7f)
         }
 
-        canvas.drawPath(mouthPath, getCustomPaint(MOUTH))
-    }
-
-    private fun getCustomPaint(type: PaintType): Paint {
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        return when (type) {
-            BACKGROUND -> paint.apply {
-                color = faceBackgroundColor
-                style = FILL
-            }
-            BORDER -> paint.apply {
-                color = borderColor
-                style = STROKE
-                strokeWidth = borderWidth
-            }
-            EYES -> paint.apply {
-                color = eyesColor
-                style = FILL
-            }
-            MOUTH -> paint.apply {
-                color = mouthColor
-                style = FILL
-            }
-        }
+        paint.color = mouthColor
+        paint.style = FILL
+        canvas.drawPath(mouthPath, paint)
     }
 
     companion object {
